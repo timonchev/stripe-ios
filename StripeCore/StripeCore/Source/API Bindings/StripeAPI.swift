@@ -100,13 +100,25 @@ import PassKit
     }
 
     @_spi(STP) public class func supportedPKPaymentNetworks() -> [PKPaymentNetwork] {
-        return [
+        var supportedNetworks: [PKPaymentNetwork] = [
             .amex,
             .masterCard,
             .maestro,
             .visa,
             .discover,
         ] + additionalEnabledApplePayNetworks
+
+        // Cartes Bancaires cards are co-branded with Visa/MasterCard.
+        // Since iOS 15.4 Apple Pay will respect the order of supportedNetworks and choose the first
+        // network that is supported. If .cartesBancaires is present on the list of supported networks,
+        // we want to move it to the head of the list as it's a prefered network.
+        // We still respect Card Brand Choice if the user selects Cartes Bancaires at their wallet.
+        if let index = supportedNetworks.firstIndex(of: .cartesBancaires) {
+            supportedNetworks.remove(at: index)
+            supportedNetworks.insert(.cartesBancaires, at: 0)
+        }
+
+        return supportedNetworks
     }
 
     /// Whether or not this can make Apple Pay payments via a card network supported
