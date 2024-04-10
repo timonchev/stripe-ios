@@ -19,6 +19,7 @@ protocol AddPaymentMethodViewControllerDelegate: AnyObject {
 
 enum OverrideableBuyButtonBehavior {
     case LinkUSBankAccount
+    case bankAccount
 }
 
 /// This displays:
@@ -92,6 +93,8 @@ class AddPaymentMethodViewController: UIViewController {
         switch overrideBuyButtonBehavior {
         case .LinkUSBankAccount:
             return usBankAccountFormElement?.canLinkAccount ?? false
+        case .bankAccount:
+            return true //usBankAccountFormElement?.canLinkAccount ?? false
         }
     }
 
@@ -113,6 +116,8 @@ class AddPaymentMethodViewController: UIViewController {
             } else {
                 return .LinkUSBankAccount
             }
+        } else if selectedPaymentMethodType == .stripe(.bankAccount) {
+            return .bankAccount // this confirms the CTA change!
         }
         return nil
     }
@@ -328,6 +333,8 @@ class AddPaymentMethodViewController: UIViewController {
         switch behavior {
         case .LinkUSBankAccount:
             handleCollectBankAccount(from: viewController)
+        case .bankAccount:
+            handleInstantDebitsBankAccount(from: viewController)
         }
     }
 
@@ -414,6 +421,10 @@ class AddPaymentMethodViewController: UIViewController {
                 financialConnectionsCompletion: financialConnectionsCompletion
             )
         }
+    }
+    
+    func handleInstantDebitsBankAccount(from viewController: UIViewController) {
+        print("HI WORLD!!!!")
     }
 
     func clearTextFields() {

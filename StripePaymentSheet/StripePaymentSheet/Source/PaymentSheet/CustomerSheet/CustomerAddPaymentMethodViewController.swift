@@ -56,6 +56,14 @@ class CustomerAddPaymentMethodViewController: UIViewController {
             } else {
                 return .LinkUSBankAccount
             }
+        } else if selectedPaymentMethodType == .stripe(.bankAccount) {
+            return .bankAccount
+//            if let paymentOption = paymentOption,
+//               case .new = paymentOption {
+//                return nil // already have PaymentOption
+//            } else {
+//                return .bankAccount
+//            }
         }
         return nil
     }
@@ -72,6 +80,8 @@ class CustomerAddPaymentMethodViewController: UIViewController {
         switch overrideBuyButtonBehavior {
         case .LinkUSBankAccount:
             return usBankAccountFormElement?.canLinkAccount ?? false
+        case .bankAccount:
+            return true
         }
     }
 
@@ -235,6 +245,8 @@ extension CustomerAddPaymentMethodViewController {
                                   from viewController: UIViewController) {
         switch behavior {
         case .LinkUSBankAccount:
+            handleCollectBankAccount(from: viewController, clientSecret: clientSecret)
+        case .bankAccount:
             handleCollectBankAccount(from: viewController, clientSecret: clientSecret)
         }
     }

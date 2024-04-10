@@ -711,6 +711,7 @@ public class STPPaymentMethodParams: NSObject, STPFormEncodable {
             .USBankAccount,
             .cashApp,
             .revolutPay,
+            .bankAccount,
             .unknown:
             return nil
         }
@@ -1219,7 +1220,7 @@ extension STPPaymentMethodParams {
             amazonPay = STPPaymentMethodAmazonPayParams()
         case .alma:
             alma = STPPaymentMethodAlmaParams()
-        case .cardPresent, .linkInstantDebit, .paynow, .zip, .konbini, .promptPay, .twint:
+        case .cardPresent, .linkInstantDebit, .paynow, .zip, .konbini, .promptPay, .twint, .bankAccount:
             // These payment methods don't have any params
             break
         case .unknown:
@@ -1299,6 +1300,8 @@ extension STPPaymentMethodParams {
             return "Revolut Pay"
         case.twint:
             return "TWINT"
+        case .bankAccount:
+            return "Bank Account"
         case .cardPresent, .unknown:
             return STPLocalizedString("Unknown", "Default missing source type label")
         case .paynow, .zip, .amazonPay, .alma, .mobilePay, .konbini, .promptPay, .swish:

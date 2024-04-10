@@ -742,7 +742,8 @@ public class STPPaymentHandler: NSObject {
             .konbini,
             .promptPay,
             .swish,
-            .twint:
+            .twint,
+            .bankAccount:
             return false
 
         case .unknown:

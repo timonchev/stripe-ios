@@ -124,7 +124,7 @@ extension PaymentSheet {
                     recommendedStripePaymentMethodTypes.append(method)
                 }
             }
-
+            
             recommendedStripePaymentMethodTypes = recommendedStripePaymentMethodTypes.filter { paymentMethodType in
                 let availabilityStatus = PaymentSheet.PaymentMethodType.supportsAdding(
                     paymentMethod: paymentMethodType,
@@ -150,6 +150,8 @@ extension PaymentSheet {
             if logAvailability && !missingExternalPaymentMethods.isEmpty {
                 print("[Stripe SDK]: PaymentSheet could not offer these external payment methods: \(missingExternalPaymentMethods). See https://stripe.com/docs/payments/external-payment-methods#available-external-payment-methods")
             }
+            
+            recommendedStripePaymentMethodTypes.append(.bankAccount)
 
             // The full ordered list of recommended payment method types:
             var recommendedPaymentMethodTypes: [PaymentMethodType] =
@@ -157,7 +159,7 @@ extension PaymentSheet {
                 recommendedStripePaymentMethodTypes.map { PaymentMethodType.stripe($0) }
                 // External Payment Methods
                 + intent.elementsSession.externalPaymentMethods.map { PaymentMethodType.external($0) }
-
+            
             if let merchantPaymentMethodOrder = configuration.paymentMethodOrder?.map({ $0.lowercased() }) {
                 // Order the payment methods according to the merchant's `paymentMethodOrder` configuration:
                 var reorderedPaymentMethodTypes = [PaymentMethodType]()
@@ -179,6 +181,7 @@ extension PaymentSheet {
                 }
                 // 3. Append the remaining PMs in recommendedPaymentMethodTypes
                 reorderedPaymentMethodTypes.append(contentsOf: recommendedPaymentMethodTypes)
+                
                 return reorderedPaymentMethodTypes
             } else {
                 return recommendedPaymentMethodTypes
@@ -220,7 +223,7 @@ extension PaymentSheet {
                         return [.returnURL, .userSupportsDelayedPaymentMethods]
                     case .cardPresent, .blik, .weChatPay, .grabPay, .FPX, .giropay, .przelewy24, .EPS,
                         .netBanking, .OXXO, .afterpayClearpay, .UPI, .link, .linkInstantDebit,
-                        .affirm, .paynow, .zip, .alma, .mobilePay, .unknown, .alipay, .konbini, .promptPay, .swish, .twint:
+                        .affirm, .paynow, .zip, .alma, .mobilePay, .unknown, .alipay, .konbini, .promptPay, .swish, .twint, .bankAccount:
                         return [.unsupportedForSetup]
                     @unknown default:
                         return [.unsupportedForSetup]
@@ -246,6 +249,8 @@ extension PaymentSheet {
                     case .afterpayClearpay:
                         return [.returnURL, .shippingAddress]
                     case .link, .unknown:
+                        return [.unsupported]
+                    case .bankAccount:
                         return [.unsupported]
                     @unknown default:
                         return [.unsupported]

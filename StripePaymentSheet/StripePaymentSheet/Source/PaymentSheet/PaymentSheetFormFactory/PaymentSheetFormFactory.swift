@@ -194,6 +194,8 @@ class PaymentSheetFormFactory {
             return makeBoleto()
         } else if paymentMethod == .swish {
             return makeSwish()
+        } else if paymentMethod == .bankAccount {
+            return makeBankAccount()
         }
 
         guard let spec = FormSpecProvider.shared.formSpec(for: paymentMethod.identifier) else {
@@ -728,6 +730,11 @@ extension PaymentSheetFormFactory {
         label.textColor = theme.colors.bodyText
         label.numberOfLines = 0
         return StaticElement(view: label)
+    }
+    
+    func makeBankAccount() -> PaymentMethodElement {
+        let mandateText = String(format: "Instant Debits Bank Account!", configuration.merchantDisplayName)
+        return makeMandate(mandateText: mandateText)
     }
 
     private func makeUSBankAccountCopyLabel() -> StaticElement {
