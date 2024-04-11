@@ -82,39 +82,40 @@ extension HostController: HostViewControllerDelegate {
         didFetch synchronizePayload: FinancialConnectionsSynchronize
     ) {
         delegate?.hostController(self, didReceiveEvent: FinancialConnectionsEvent(name: .open))
+        continueWithWebFlow(synchronizePayload.manifest)
 
-        let flowRouter = FlowRouter(
-            synchronizePayload: synchronizePayload,
-            analyticsClient: analyticsClient
-        )
-        defer {
-            // no matter how we exit this function
-            // log exposure to one of the variants if appropriate.
-            flowRouter.logExposureIfNeeded()
-        }
-
-        guard flowRouter.shouldUseNative else {
-            continueWithWebFlow(synchronizePayload.manifest)
-            return
-        }
-
-        navigationController.configureAppearanceForNative()
-
-        let dataManager = NativeFlowAPIDataManager(
-            manifest: synchronizePayload.manifest,
-            visualUpdate: synchronizePayload.visual,
-            returnURL: returnURL,
-            consentPaneModel: synchronizePayload.text?.consentPane,
-            apiClient: api,
-            clientSecret: clientSecret,
-            analyticsClient: analyticsClient
-        )
-        nativeFlowController = NativeFlowController(
-            dataManager: dataManager,
-            navigationController: navigationController
-        )
-        nativeFlowController?.delegate = self
-        nativeFlowController?.startFlow()
+//        let flowRouter = FlowRouter(
+//            synchronizePayload: synchronizePayload,
+//            analyticsClient: analyticsClient
+//        )
+//        defer {
+//            // no matter how we exit this function
+//            // log exposure to one of the variants if appropriate.
+//            flowRouter.logExposureIfNeeded()
+//        }
+//
+//        guard flowRouter.shouldUseNative else {
+//            continueWithWebFlow(synchronizePayload.manifest)
+//            return
+//        }
+//
+//        navigationController.configureAppearanceForNative()
+//
+//        let dataManager = NativeFlowAPIDataManager(
+//            manifest: synchronizePayload.manifest,
+//            visualUpdate: synchronizePayload.visual,
+//            returnURL: returnURL,
+//            consentPaneModel: synchronizePayload.text?.consentPane,
+//            apiClient: api,
+//            clientSecret: clientSecret,
+//            analyticsClient: analyticsClient
+//        )
+//        nativeFlowController = NativeFlowController(
+//            dataManager: dataManager,
+//            navigationController: navigationController
+//        )
+//        nativeFlowController?.delegate = self
+//        nativeFlowController?.startFlow()
     }
 
     func hostViewController(

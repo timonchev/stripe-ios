@@ -36,4 +36,22 @@ public class STPCollectBankAccountParams: NSObject {
         paymentMethodParams.type = .USBankAccount
         return STPCollectBankAccountParams(paymentMethodParams: paymentMethodParams)
     }
+    
+    /// Configures and returns an instance of `STPCollectBankAccountParams` for Bank Accounts
+    /// - Parameters:
+    ///     - email: The customer's email.
+    @objc(collectUSBankAccountParamsWithEmail:)
+    public class func collectBankAccountParams(
+        email: String?
+    ) -> STPCollectBankAccountParams {
+        let billingDetails = STPPaymentMethodBillingDetails()
+        billingDetails.email = email
+
+        // TODO: Notify...
+        
+        let paymentMethodParams = STPPaymentMethodParams()
+//        paymentMethodParams.billingDetails = billingDetails
+//        paymentMethodParams.type = .USBankAccount
+        return STPCollectBankAccountParams(paymentMethodParams: paymentMethodParams)
+    }
 }

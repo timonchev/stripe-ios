@@ -424,7 +424,92 @@ class AddPaymentMethodViewController: UIViewController {
     }
     
     func handleInstantDebitsBankAccount(from viewController: UIViewController) {
-        print("HI WORLD!!!!")
+//        guard
+//            let usBankAccountPaymentMethodElement = self.paymentMethodFormElement as? USBankAccountPaymentMethodElement,
+//            let email = usBankAccountPaymentMethodElement.email
+//        else {
+//            let errorAnalytic = ErrorAnalytic(event: .unexpectedPaymentSheetError,
+//                                              error: Error.usBankAccountParamsMissing)
+//            STPAnalyticsClient.sharedClient.log(analytic: errorAnalytic)
+//            stpAssertionFailure()
+//            return
+//        }
+
+        let params = STPCollectBankAccountParams.collectBankAccountParams(email: nil)
+        let client = STPBankAccountCollector()
+        let genericError = PaymentSheetError.accountLinkFailure
+
+        let financialConnectionsCompletion: (FinancialConnectionsSDKResult?, LinkAccountSession?, NSError?) -> Void = {
+            result,
+            _,
+            error in
+            if error != nil {
+                self.delegate?.updateErrorLabel(for: genericError)
+                return
+            }
+            guard let financialConnectionsResult = result else {
+                self.delegate?.updateErrorLabel(for: genericError)
+                return
+            }
+
+            switch financialConnectionsResult {
+            case .cancelled:
+                break
+            case .completed(let linkedBank):
+                print(linkedBank)
+//                usBankAccountPaymentMethodElement.setLinkedBank(linkedBank)
+            case .failed:
+                self.delegate?.updateErrorLabel(for: genericError)
+            }
+        }
+        switch intent {
+        case .paymentIntent(_, let paymentIntent):
+            client.collectBankAccountForPayment(
+                clientSecret: paymentIntent.clientSecret,
+                returnURL: configuration.returnURL,
+                onEvent: nil,
+                params: params,
+                from: viewController,
+                financialConnectionsCompletion: financialConnectionsCompletion
+            )
+        case .setupIntent(_, let setupIntent):
+            client.collectBankAccountForSetup(
+                clientSecret: setupIntent.clientSecret,
+                returnURL: configuration.returnURL,
+                onEvent: nil,
+                params: params,
+                from: viewController,
+                financialConnectionsCompletion: financialConnectionsCompletion
+            )
+        case .deferredIntent:
+            // NOT SUPPORTED!!!
+            let errorAnalytic = ErrorAnalytic(
+                event: .unexpectedPaymentSheetError,
+                error: Error.usBankAccountParamsMissing
+            )
+            STPAnalyticsClient.sharedClient.log(analytic: errorAnalytic)
+            stpAssertionFailure()
+//            let amount: Int?
+//            let currency: String?
+//            switch intentConfig.mode {
+//            case let .payment(amount: _amount, currency: _currency, _, _):
+//                amount = _amount
+//                currency = _currency
+//            case let .setup(currency: _currency, _):
+//                amount = nil
+//                currency = _currency
+//            }
+//            client.collectBankAccountForDeferredIntent(
+//                sessionId: elementsSession.sessionID,
+//                returnURL: configuration.returnURL,
+//                onEvent: nil,
+//                amount: amount,
+//                currency: currency,
+//                onBehalfOf: intentConfig.onBehalfOf,
+//                from: viewController,
+//                financialConnectionsCompletion: financialConnectionsCompletion
+//            )
+        }
     }
 
     func clearTextFields() {
