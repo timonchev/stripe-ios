@@ -36,6 +36,7 @@ public class FinancialConnectionsSDKImplementation: FinancialConnectionsSDKInter
             completion: { result in
                 switch result {
                 case .completed(let session):
+                    // here
                     guard let paymentAccount = session.paymentAccount else {
                         completion(
                             .failed(
@@ -58,8 +59,10 @@ public class FinancialConnectionsSDKImplementation: FinancialConnectionsSDKInter
                         )
                     }
                 case .canceled:
+                    // here
                     completion(.cancelled)
                 case .failed(let error):
+                    // here
                     completion(.failed(error: error))
                 }
             }

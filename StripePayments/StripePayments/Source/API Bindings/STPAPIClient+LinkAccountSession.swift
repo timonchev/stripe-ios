@@ -48,6 +48,7 @@ public extension STPAPIClient {
         additionalParameteres: [String: Any] = [:],
         completion: @escaping STPLinkAccountSessionBlock
     ) {
+        // here
         let endpoint: String = "payment_intents/\(paymentIntentID)/link_account_sessions"
         linkAccountSessions(
             endpoint: endpoint,
@@ -106,7 +107,7 @@ public extension STPAPIClient {
         if let customerEmailAddress = customerEmailAddress {
             parameters["payment_method_data[billing_details][email]"] = customerEmailAddress
         }
-        
+        // here
         parameters["hosted_surface"] = "payment_element"
         parameters["product"] = "instant_debits"
         parameters["payment_method_data[type]"] = "link"

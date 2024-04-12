@@ -733,8 +733,44 @@ extension PaymentSheetFormFactory {
     }
     
     func makeBankAccount() -> PaymentMethodElement {
-        let mandateText = String(format: "Instant Debits Bank Account!", configuration.merchantDisplayName)
-        return makeMandate(mandateText: mandateText)
+        let isSaving = BoolReference()
+        let saveCheckbox = makeSaveCheckbox(
+            label: String(
+                format: STPLocalizedString(
+                    "Save this account for future %@ payments",
+                    "Prompt next to checkbox to save bank account."
+                ),
+                "INSERT_MERCHANT_NAME_HERE_IF_NEEDED"
+            )
+        ) { value in
+            isSaving.value = value
+        }
+        let shouldDisplaySaveCheckbox: Bool = saveMode == .userSelectable && !canSaveToLink
+        isSaving.value =
+            shouldDisplaySaveCheckbox
+            ? configuration.savePaymentMethodOptInBehavior.isSelectedByDefault : saveMode == .merchantRequired
+
+        let phoneElement = configuration.billingDetailsCollectionConfiguration.phone == .always ? makePhone() : nil
+        let addressElement = configuration.billingDetailsCollectionConfiguration.address == .full
+            ? makeBillingAddressSection(collectionMode: .all(), countries: nil)
+            : nil
+        connectBillingDetailsFields(
+            countryElement: nil,
+            addressElement: addressElement,
+            phoneElement: phoneElement)
+
+        return BankAccountPaymentMethodElement(
+            configuration: configuration,
+            titleElement: makeUSBankAccountCopyLabel(),
+            nameElement: configuration.billingDetailsCollectionConfiguration.name != .never ? makeName() : nil,
+            emailElement: configuration.billingDetailsCollectionConfiguration.email != .never ? makeEmail() : nil,
+            phoneElement: phoneElement,
+            addressElement: addressElement,
+            checkboxElement: shouldDisplaySaveCheckbox ? saveCheckbox : nil,
+            savingAccount: isSaving,
+            merchantName: "INSERT_MERCHANT_NAME_IF_NEEDED",
+            theme: theme
+        )
     }
 
     private func makeUSBankAccountCopyLabel() -> StaticElement {

@@ -94,7 +94,7 @@ class AddPaymentMethodViewController: UIViewController {
         case .LinkUSBankAccount:
             return usBankAccountFormElement?.canLinkAccount ?? false
         case .bankAccount:
-            return true //usBankAccountFormElement?.canLinkAccount ?? false
+            return bankAccountFormElement?.enableCTA ?? false
         }
     }
 
@@ -139,11 +139,30 @@ class AddPaymentMethodViewController: UIViewController {
         }
         return paymentMethodElement as? USBankAccountPaymentMethodElement
     }()
+    private lazy var bankAccountFormElement: BankAccountPaymentMethodElement? = {
+        // We are keeping usBankAccountInfo in memory to preserve state
+        // if the user switches payment method types
+        let paymentMethodElement = makeElement(for: selectedPaymentMethodType)
+        if let bankAccountPaymentMethodElement = paymentMethodElement as? BankAccountPaymentMethodElement {
+            bankAccountPaymentMethodElement.presentingViewControllerDelegate = self
+        } else {
+            let errorAnalytic = ErrorAnalytic(event: .unexpectedPaymentSheetError,
+                                              error: Error.usBankAccountFormElementWrongElementCreated)
+            STPAnalyticsClient.sharedClient.log(analytic: errorAnalytic)
+            stpAssertionFailure("Invalid type of paymentMethodElement")
+        }
+        return paymentMethodElement as? BankAccountPaymentMethodElement
+    }()
     private lazy var paymentMethodFormElement: PaymentMethodElement = {
         if selectedPaymentMethodType == .stripe(.USBankAccount),
             let usBankAccountFormElement = usBankAccountFormElement
         {
             return usBankAccountFormElement
+        } else if 
+            selectedPaymentMethodType == .stripe(.bankAccount),
+            let bankAccountFormElement = bankAccountFormElement
+        {
+            return bankAccountFormElement
         }
         let element = makeElement(for: selectedPaymentMethodType)
         // Only use the previous customer input in the very first load, to avoid overwriting customer input
@@ -322,6 +341,15 @@ class AddPaymentMethodViewController: UIViewController {
             let usBankAccountFormElement = usBankAccountFormElement
         {
             paymentMethodFormElement = usBankAccountFormElement
+        } else if 
+            selectedPaymentMethodType == .stripe(.bankAccount),
+            let bankAccountFormElement = bankAccountFormElement
+        {
+            
+          // TODO ???
+            // This is the key part that will set the form!!!!!!!
+            print("this sets the form up") // paymentMethodFormElement
+            paymentMethodFormElement = bankAccountFormElement
         } else {
             paymentMethodFormElement = makeElement(for: selectedPaymentMethodType)
         }
@@ -424,16 +452,16 @@ class AddPaymentMethodViewController: UIViewController {
     }
     
     func handleInstantDebitsBankAccount(from viewController: UIViewController) {
-//        guard
-//            let usBankAccountPaymentMethodElement = self.paymentMethodFormElement as? USBankAccountPaymentMethodElement,
+        guard
+            let bankAccountPaymentMethodElement = self.paymentMethodFormElement as? BankAccountPaymentMethodElement
 //            let email = usBankAccountPaymentMethodElement.email
-//        else {
-//            let errorAnalytic = ErrorAnalytic(event: .unexpectedPaymentSheetError,
-//                                              error: Error.usBankAccountParamsMissing)
-//            STPAnalyticsClient.sharedClient.log(analytic: errorAnalytic)
-//            stpAssertionFailure()
-//            return
-//        }
+        else {
+            let errorAnalytic = ErrorAnalytic(event: .unexpectedPaymentSheetError,
+                                              error: Error.usBankAccountParamsMissing)
+            STPAnalyticsClient.sharedClient.log(analytic: errorAnalytic)
+            stpAssertionFailure()
+            return
+        }
 
         let params = STPCollectBankAccountParams.collectBankAccountParams(email: nil)
         let client = STPBankAccountCollector()
@@ -454,16 +482,21 @@ class AddPaymentMethodViewController: UIViewController {
 
             switch financialConnectionsResult {
             case .cancelled:
+                // here
                 break
             case .completed(let linkedBank):
-                print(linkedBank)
+                // here
+//                print(linkedBank)
+                bankAccountPaymentMethodElement.setLinkedBank(linkedBank)
 //                usBankAccountPaymentMethodElement.setLinkedBank(linkedBank)
             case .failed:
+                // here
                 self.delegate?.updateErrorLabel(for: genericError)
             }
         }
         switch intent {
         case .paymentIntent(_, let paymentIntent):
+            // here!
             client.collectBankAccountForPayment(
                 clientSecret: paymentIntent.clientSecret,
                 returnURL: configuration.returnURL,

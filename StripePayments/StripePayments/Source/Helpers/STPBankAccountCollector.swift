@@ -162,6 +162,8 @@ public class STPBankAccountCollector: NSObject {
                     completion(nil, NSError.stp_genericFailedToParseResponseError())
                     return
                 }
+                
+                // result here
 
                 switch result {
                 case .completed:
@@ -172,6 +174,7 @@ public class STPBankAccountCollector: NSObject {
                         completion: completion
                     )
                 case .cancelled:
+                    // here
                     self.apiClient.retrievePaymentIntent(withClientSecret: clientSecret) {
                         intent,
                         error in
@@ -190,6 +193,7 @@ public class STPBankAccountCollector: NSObject {
                         }
                     }
                 case .failed(let error):
+                    // here
                     completion(
                         nil,
                         self.error(for: .unexpectedError, userInfo: [NSUnderlyingErrorKey: error])
@@ -253,10 +257,11 @@ public class STPBankAccountCollector: NSObject {
                 onEvent: onEvent,
                 from: viewController
             ) { result in
+                // result here
                 financialConnectionsCompletion(result, linkAccountSession, nil)
             }
         }
-
+// here
         apiClient.createLinkAccountSession(
             paymentIntentID: paymentIntentID,
             clientSecret: clientSecret,

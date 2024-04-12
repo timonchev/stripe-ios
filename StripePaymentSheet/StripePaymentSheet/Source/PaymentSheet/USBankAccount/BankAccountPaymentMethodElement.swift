@@ -1,8 +1,8 @@
 //
-//  USBankAccountPaymentMethodElement.swift
+//  BankAccountPaymentMethodElement.swift
 //  StripePaymentSheet
 //
-//  Copyright © 2022 Stripe, Inc. All rights reserved.
+//  Created by Krisjanis Gaidis on 4/11/24.
 //
 
 @_spi(STP) import StripeCore
@@ -11,8 +11,7 @@
 @_spi(STP) import StripeUICore
 import UIKit
 
-// this represents the form element that appears under the "Bank Account" selector
-final class USBankAccountPaymentMethodElement: Element {
+final class BankAccountPaymentMethodElement: Element {
     var presentingViewControllerDelegate: PresentingViewControllerDelegate?
 
     var delegate: ElementDelegate?
@@ -53,11 +52,12 @@ final class USBankAccountPaymentMethodElement: Element {
     static let MicrodepositCopy: String = STPLocalizedString("Stripe will deposit $0.01 to your account in 1-2 business days. Then you’ll get an email with instructions to complete payment to %@.", "Prompt for microdeposit verification before completing purchase with merchant. %@ will be replaced by merchant business name")
     static let MicrodepositCopy_CustomerSheet: String = STPLocalizedString("Stripe will deposit $0.01 to your account in 1-2 business days. Then you'll get an email with instructions to finish saving your bank account with %@.", "Prompt for microdeposit verification before completing saving payment method with merchant. %@ will be replaced by merchant business name")
 
-    var canLinkAccount: Bool {
-        let params = self.formElement.updateParams(params: IntentConfirmParams(type: .stripe(.USBankAccount)))
+    var enableCTA: Bool {
+        let params = self.formElement.updateParams(params: IntentConfirmParams(type: .stripe(.bankAccount)))
         // If name and email are not collected they won't be verified when updating params.
         // Check if params are valid, and name and email are provided either through the form or through defaults.
-        return params != nil && name != nil && email != nil
+//        && name != nil
+        return params != nil && email != nil
     }
 
     var name: String? {
@@ -117,11 +117,11 @@ final class USBankAccountPaymentMethodElement: Element {
         self.savingAccount = savingAccount
         self.theme = theme
         let allElements: [Element?] = [
-            titleElement,
-            nameElement,
+//            titleElement,
+//            nameElement,
             emailElement,
-            phoneElement,
-            addressElement,
+//            phoneElement,
+//            addressElement,
             bankInfoSectionElement,
         ]
         var autoSectioningElements = allElements.compactMap { $0 }
@@ -194,7 +194,7 @@ final class USBankAccountPaymentMethodElement: Element {
     }
 }
 
-extension USBankAccountPaymentMethodElement: BankAccountInfoViewDelegate {
+extension BankAccountPaymentMethodElement: BankAccountInfoViewDelegate {
     func didTapXIcon() {
         let completionClosure = {
             self.formElement.setElements(self.linkedAccountElements, hidden: true, animated: true)
@@ -223,7 +223,7 @@ extension USBankAccountPaymentMethodElement: BankAccountInfoViewDelegate {
     }
 }
 
-extension USBankAccountPaymentMethodElement: PaymentMethodElement {
+extension BankAccountPaymentMethodElement: PaymentMethodElement {
     func updateParams(params: IntentConfirmParams) -> IntentConfirmParams? {
         if let updatedParams = self.formElement.updateParams(params: params),
            let linkedBank = linkedBank {
@@ -235,7 +235,7 @@ extension USBankAccountPaymentMethodElement: PaymentMethodElement {
     }
 }
 
-extension USBankAccountPaymentMethodElement: ElementDelegate {
+extension BankAccountPaymentMethodElement: ElementDelegate {
     func didUpdate(element: Element) {
         self.delegate?.didUpdate(element: element)
     }
