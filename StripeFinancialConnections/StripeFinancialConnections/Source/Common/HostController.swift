@@ -8,12 +8,27 @@
 @_spi(STP) import StripeCore
 import UIKit
 
+@_spi(STP) public enum HostControllerResult {
+    case completed(HostControllerCompletedResult)
+    case failed(error: Error)
+    case canceled
+}
+
+@_spi(STP) public enum HostControllerCompletedResult {
+    case financialConnections(StripeAPI.FinancialConnectionsSession)
+    case instantDebits(InstantDebitsSession)
+}
+
+@_spi(STP) public struct InstantDebitsSession {
+    let paymentMethodId: String
+}
+
 protocol HostControllerDelegate: AnyObject {
 
     func hostController(
         _ hostController: HostController,
         viewController: UIViewController,
-        didFinish result: FinancialConnectionsSheet.Result
+        didFinish result: HostControllerResult
     )
 
     func hostController(
@@ -162,9 +177,9 @@ extension HostController: FinancialConnectionsWebFlowViewControllerDelegate {
 
     func webFlowViewController(
         _ viewController: FinancialConnectionsWebFlowViewController,
-        didFinish result: FinancialConnectionsSheet.Result
+        didFinish result: HostControllerResult
     ) {
-        delegate?.hostController(self, viewController: viewController, didFinish: result)
+         delegate?.hostController(self, viewController: viewController, didFinish: result)
     }
 
     func webFlowViewController(
@@ -186,7 +201,16 @@ extension HostController: NativeFlowControllerDelegate {
             assertionFailure("Navigation stack is empty")
             return
         }
-        delegate?.hostController(self, viewController: viewController, didFinish: result)
+        let hostControllerResult: HostControllerResult
+        switch result {
+        case .completed(let session):
+            hostControllerResult = .completed(.financialConnections(session))
+        case .canceled:
+            hostControllerResult = .canceled
+        case .failed(let error):
+            hostControllerResult = .failed(error: error)
+        }
+        delegate?.hostController(self, viewController: viewController, didFinish: hostControllerResult)
     }
 
     func nativeFlowController(

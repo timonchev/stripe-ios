@@ -14,7 +14,7 @@ final class AuthenticationSessionManager: NSObject {
     // MARK: - Types
 
     enum Result {
-        case success
+        case success(returnUrl: URL)
         case webCancelled
         case nativeCancelled
         case redirect(url: URL)
@@ -54,6 +54,20 @@ final class AuthenticationSessionManager: NSObject {
             promise.reject(with: FinancialConnectionsSheetError.unknown(debugDescription: "NULL `successUrl`"))
             return promise
         }
+        
+//        print("url before", url)
+        
+//        var urlBuilder = URLComponents(string: url.absoluteString)
+//        let queryItem = URLQueryItem(
+//            name: "return_payment_method",
+//            value: "true"
+//        )
+//        urlBuilder?.queryItems?.append(queryItem)
+//        guard let url = URL(string: url.absoluteString.appending("&return_payment_method=true")) else {
+//            promise.reject(with: FinancialConnectionsSheetError.unknown(debugDescription: "Malformed hosted auth URL"))
+//            return promise
+//        }
+//        print("url after", url)
 
         let authSession = ASWebAuthenticationSession(
             url: url,
@@ -73,15 +87,17 @@ final class AuthenticationSessionManager: NSObject {
                     }
                     return
                 }
-
-                guard let returnUrlString = returnUrl?.absoluteString else {
+                guard let returnUrl = returnUrl else {
                     promise.reject(with: FinancialConnectionsSheetError.unknown(debugDescription: "Missing return URL"))
                     return
                 }
-
-                if returnUrlString == self.manifest.successUrl {
-                    promise.resolve(with: .success)
-                } else if returnUrlString == self.manifest.cancelUrl {
+                let returnUrlString = returnUrl.absoluteString
+                
+                // `matchesSchemeHostAndPath` is necessary for instant debits which
+                // contains additional query parameters at the end of the `successUrl`
+                if returnUrl.matchesSchemeHostAndPath(of: URL(string: self.manifest.successUrl ?? ""))  {
+                    promise.resolve(with: .success(returnUrl: returnUrl))
+                } else if  returnUrl.matchesSchemeHostAndPath(of: URL(string: self.manifest.cancelUrl ?? ""))  {
                     promise.resolve(with: .webCancelled)
                 } else if returnUrlString.hasNativeRedirectPrefix,
                     let targetURL = URL(string: returnUrlString.droppingNativeRedirectPrefix())
@@ -90,6 +106,25 @@ final class AuthenticationSessionManager: NSObject {
                 } else {
                     promise.reject(with: FinancialConnectionsSheetError.unknown(debugDescription: "Nil return URL"))
                 }
+                
+//                if self.manifest.isProductInstantDebits {
+//                    if returnUrl.matchesSchemeHostAndPath(of: URL(string: successUrl)) {
+//                        if let paymentMethodID = Self.extractValue(from: returnUrl, key: "payment_method_id") {
+//                            print(paymentMethodID)
+//                            promise.resolve(with: .success)
+////                            let details = RedactedPaymentDetails(paymentMethodID: paymentMethodID,
+////                                                                 bankName: Self.extractValue(from: returnUrl, key: "bank_name")?.replacingOccurrences(of: "+", with: " "),
+////                                                                 bankIconCode: Self.extractValue(from: returnUrl, key: "bank_icon_code"),
+////                                                                 last4: Self.extractValue(from: returnUrl, key: "last4"))
+////                            promise.fullfill(with: .success(.success(details: details)))
+//                        } else {
+//                            promise.reject(with: FinancialConnectionsSheetError.unknown(debugDescription: "no payment method id"))
+//                        }
+//                    } else if returnUrl.matchesSchemeHostAndPath(of: URL(string: manifest.cancelUrl ?? "")) {
+//                        promise.resolve(with: .webCancelled)
+//                    } else {
+//                        promise.reject(with: FinancialConnectionsSheetError.unknown(debugDescription: "Nil return URL"))
+//                    }
             }
         )
         authSession.presentationContextProvider = self
@@ -137,5 +172,19 @@ extension AuthenticationSessionManager: ASWebAuthenticationPresentationContextPr
 
     func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
         return self.window ?? ASPresentationAnchor()
+    }
+}
+
+extension URL {
+
+    fileprivate func matchesSchemeHostAndPath(of otherURL: URL?) -> Bool {
+        guard let otherURL = otherURL else {
+            return false
+        }
+        return (
+            self.scheme == otherURL.scheme &&
+            self.host == otherURL.host &&
+            self.path == otherURL.path
+        )
     }
 }

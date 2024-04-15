@@ -75,4 +75,27 @@ struct FinancialConnectionsSheetCompletionAnalytic {
             )
         }
     }
+    
+    static func make(
+        clientSecret: String,
+        result: HostControllerResult
+    ) -> FinancialConnectionsSheetAnalytic {
+        switch result {
+        case .completed:
+            return FinancialConnectionsSheetClosedAnalytic(
+                clientSecret: clientSecret,
+                result: "completed"
+            )
+        case .canceled:
+            return FinancialConnectionsSheetClosedAnalytic(
+                clientSecret: clientSecret,
+                result: "cancelled"
+            )
+        case .failed(let error):
+            return FinancialConnectionsSheetFailedAnalytic(
+                clientSecret: clientSecret,
+                error: error
+            )
+        }
+    }
 }

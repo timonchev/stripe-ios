@@ -15,6 +15,17 @@ import UIKit
 public class FinancialConnectionsSDKImplementation: FinancialConnectionsSDKInterface {
 
     required public init() {}
+    
+    public func presentFinancialConnectionsSheet(
+        apiClient: STPAPIClient,
+        clientSecret: String,
+        returnURL: String?,
+        onEvent: ((StripeCore.FinancialConnectionsEvent) -> Void)?,
+        from presentingViewController: UIViewController,
+        completion: @escaping (FinancialConnectionsSDKResultNew<Any>) -> Void
+    ) {
+        
+    }
 
     public func presentFinancialConnectionsSheet(
         apiClient: STPAPIClient,
@@ -30,33 +41,41 @@ public class FinancialConnectionsSDKImplementation: FinancialConnectionsSDKInter
         )
         financialConnectionsSheet.apiClient = apiClient
         financialConnectionsSheet.onEvent = onEvent
+        
+        // here we need some sort of result
+        
         // Captures self explicitly until the callback is invoked
         financialConnectionsSheet.present(
             from: presentingViewController,
             completion: { result in
                 switch result {
-                case .completed(let session):
-                    // here
-                    guard let paymentAccount = session.paymentAccount else {
-                        completion(
-                            .failed(
-                                error: FinancialConnectionsSheetError.unknown(
-                                    debugDescription: "PaymentAccount is not set on FinancialConnectionsSession"
+                case .completed(let hostControllerResult):
+                    switch hostControllerResult {
+                    case .financialConnections(let session):
+                        // here
+                        guard let paymentAccount = session.paymentAccount else {
+                            completion(
+                                .failed(
+                                    error: FinancialConnectionsSheetError.unknown(
+                                        debugDescription: "PaymentAccount is not set on FinancialConnectionsSession"
+                                    )
                                 )
                             )
-                        )
-                        return
-                    }
-                    if let linkedBank = self.linkedBankFor(paymentAccount: paymentAccount, session: session) {
-                        completion(.completed(linkedBank: linkedBank))
-                    } else {
-                        completion(
-                            .failed(
-                                error: FinancialConnectionsSheetError.unknown(
-                                    debugDescription: "Unknown PaymentAccount is set on FinancialConnectionsSession"
+                            return
+                        }
+                        if let linkedBank = self.linkedBankFor(paymentAccount: paymentAccount, session: session) {
+                            completion(.completed(linkedBank: linkedBank))
+                        } else {
+                            completion(
+                                .failed(
+                                    error: FinancialConnectionsSheetError.unknown(
+                                        debugDescription: "Unknown PaymentAccount is set on FinancialConnectionsSession"
+                                    )
                                 )
                             )
-                        )
+                        }
+                    case .instantDebits(let instantDebitSession):
+                        print(instantDebitSession) // <---- HERE NEEDS TO BE MODIFIED NEXT
                     }
                 case .canceled:
                     // here

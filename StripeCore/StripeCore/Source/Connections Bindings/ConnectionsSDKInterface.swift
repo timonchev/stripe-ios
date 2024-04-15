@@ -8,6 +8,12 @@
 
 import UIKit
 
+@_spi(STP) @frozen public enum FinancialConnectionsSDKResultNew<T> {
+    case completed(T)
+    case cancelled
+    case failed(error: Error)
+}
+
 @_spi(STP) @frozen public enum FinancialConnectionsSDKResult {
     case completed(linkedBank: LinkedBank)
     case cancelled
